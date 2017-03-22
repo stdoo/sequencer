@@ -23,12 +23,12 @@ import struct
 
 def handle_pkt(pkt):
     pkt = str(pkt)
-    if len(pkt) < 12: return
+    if len(pkt) < 16: return
     preamble = pkt[:8]
     preamble_exp = "\x00" * 8
     if preamble != preamble_exp: return
-    serial_number = struct.unpack("<L", pkt[8:12])[0]
-    msg = pkt[12:]
+    serial_number = struct.unpack("<L", pkt[12:16])[0]
+    msg = pkt[16:]
     print msg
     sys.stdout.flush()
 

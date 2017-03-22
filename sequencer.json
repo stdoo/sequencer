@@ -56,6 +56,10 @@
                     64
                 ],
                 [
+                    "num_valid",
+                    32
+                ],
+                [
                     "serial_number",
                     32
                 ]
@@ -64,8 +68,20 @@
             "max_length": null
         },
         {
-            "name": "ingress_metadata_t",
+            "name": "sequencer_port_t",
             "id": 2,
+            "fields": [
+                [
+                    "port",
+                    8
+                ]
+            ],
+            "length_exp": null,
+            "max_length": null
+        },
+        {
+            "name": "ingress_metadata_t",
+            "id": 3,
             "fields": [
                 [
                     "serial_number",
@@ -90,8 +106,14 @@
             "metadata": false
         },
         {
-            "name": "ingress_data",
+            "name": "sequencer_port",
             "id": 2,
+            "header_type": "sequencer_port_t",
+            "metadata": false
+        },
+        {
+            "name": "ingress_data",
+            "id": 3,
             "header_type": "ingress_metadata_t",
             "metadata": true
         }
@@ -145,6 +167,44 @@
                             ]
                         }
                     ],
+                    "transition_key": [
+                        {
+                            "type": "field",
+                            "value": [
+                                "sequencer_head",
+                                "num_valid"
+                            ]
+                        }
+                    ],
+                    "transitions": [
+                        {
+                            "type": "hexstr",
+                            "value": "0x00000000",
+                            "mask": null,
+                            "next_state": null
+                        },
+                        {
+                            "type": "default",
+                            "value": null,
+                            "mask": null,
+                            "next_state": "parse_port"
+                        }
+                    ]
+                },
+                {
+                    "name": "parse_port",
+                    "id": 2,
+                    "parser_ops": [
+                        {
+                            "op": "extract",
+                            "parameters": [
+                                {
+                                    "type": "regular",
+                                    "value": "sequencer_port"
+                                }
+                            ]
+                        }
+                    ],
                     "transition_key": [],
                     "transitions": [
                         {
@@ -164,7 +224,8 @@
             "name": "deparser",
             "id": 0,
             "order": [
-                "sequencer_head"
+                "sequencer_head",
+                "sequencer_port"
             ]
         }
     ],
@@ -197,8 +258,36 @@
                             ]
                         },
                         {
+                            "type": "field",
+                            "value": [
+                                "sequencer_port",
+                                "port"
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "op": "add_to_field",
+                    "parameters": [
+                        {
+                            "type": "field",
+                            "value": [
+                                "sequencer_head",
+                                "num_valid"
+                            ]
+                        },
+                        {
                             "type": "hexstr",
-                            "value": "0x2"
+                            "value": "-0x1"
+                        }
+                    ]
+                },
+                {
+                    "op": "remove_header",
+                    "parameters": [
+                        {
+                            "type": "header",
+                            "value": "sequencer_port"
                         }
                     ]
                 },
@@ -298,7 +387,7 @@
                     "key": [
                         {
                             "match_type": "valid",
-                            "target": "sequencer_head",
+                            "target": "sequencer_port",
                             "mask": null
                         }
                     ],

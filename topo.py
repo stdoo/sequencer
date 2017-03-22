@@ -52,6 +52,7 @@ class MyTopo(Topo):
                                     thrift_port = _THRIFT_BASE_PORT + i,
                                     pcap_dump = True,
                                     device_id = i)
+
         
         for h in xrange(nb_hosts):
             host = self.addHost('h%d' % (h + 1))
