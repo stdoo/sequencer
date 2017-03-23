@@ -33,7 +33,7 @@ _THRIFT_BASE_PORT = 22222
 parser = argparse.ArgumentParser(description='Mininet demo')
 parser.add_argument('--behavioral-exe', help='Path to behavioral executable',
                     type=str, action="store", required=True)
-parser.add_argument('--json', help='Path to JSON config file',
+parser.add_argument('--json', nargs='*', help='Path to JSON config file',
                     type=str, action="store", required=True)
 parser.add_argument('--cli', help='Path to BM CLI',
                     type=str, action="store", required=True)
@@ -48,7 +48,7 @@ class MyTopo(Topo):
         for i in xrange(nb_switches):
             switch = self.addSwitch('s%d' % (i + 1),
                                     sw_path = sw_path,
-                                    json_path = json_path,
+                                    json_path = json_path[i],
                                     thrift_port = _THRIFT_BASE_PORT + i,
                                     pcap_dump = True,
                                     device_id = i)
@@ -107,7 +107,7 @@ def main():
     sleep(1)
 
     for i in xrange(nb_switches):
-        cmd = [args.cli, "--json", args.json,
+        cmd = [args.cli, "--json", args.json[i],
                "--thrift-port", str(_THRIFT_BASE_PORT + i)]
         with open("commands.txt", "r") as f:
             print " ".join(cmd)
