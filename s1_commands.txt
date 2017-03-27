@@ -1,0 +1,6 @@
+table_set_default s1_check_pkt no_op
+table_add s1_check_pkt _drop 0 =>
+
+table_set_default s1_route_pkt _drop
+table_add s1_route_pkt s1_route 1 0 => 3
+table_add s1_route_pkt s1_route 3 0 => 2

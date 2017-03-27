@@ -23,13 +23,13 @@ import struct
 
 def handle_pkt(pkt):
     pkt = str(pkt)
-    if len(pkt) < 16: return
-    preamble = pkt[:8]
-    preamble_exp = "\x00" * 8
+    if len(pkt) < 8: return
+    preamble = pkt[:2]
+    preamble_exp = "\x00" * 2
     if preamble != preamble_exp: return
-    serial_number = struct.unpack("<L", pkt[12:16])[0]
-    msg = pkt[16:]
-    print msg
+    sequence_number = struct.unpack("<L", pkt[4:8])[0]
+    msg = pkt[8:]
+    print('sequence_number:%s\tmsg:%s' %(sequence_number, msg))
     sys.stdout.flush()
 
 def main():

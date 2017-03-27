@@ -19,16 +19,15 @@ from scapy.all import Packet
 from scapy.all import ShortField, IntField, LongField, BitField
 
 import networkx as nx
-import matplotlib.pyplot as plt
 
 import sys
 
 class SrcRoute(Packet):
     name = "SrcRoute"
     fields_desc = [
-        LongField("preamble", 0),
-        IntField("num_valid", 0),
-        IntField("serial_number", 0)
+        ShortField("preamble", 0),
+        ShortField("group_id", 0),
+        IntField("sequence_number", 0)
     ]
 
 def read_topo():
@@ -49,16 +48,7 @@ def read_topo():
     return int(nb_hosts), int(nb_switches), links
 
 def main():
-    if len(sys.argv) < 3:
-        print "Usage: send.py [this_host] [target_group]"
-        print "For example: send.py h1 group1"
-        sys.exit(1)
-
-    src = sys.argv[1]
-    dst = sys.argv[2:]
-
     nb_hosts, nb_switches, links = read_topo()
-
     port_map = {}
 
     for a, b in links:
@@ -70,55 +60,18 @@ def main():
         assert(b not in port_map[a])
         assert(a not in port_map[b])
         port_map[a][b] = len(port_map[a]) + 1
-        port_map[b][a] = len(port_map[b]) + 1
-
-
-    G = nx.Graph()
-    for a, b in links:
-        G.add_edge(a, b) 
-
-    shortest_paths = nx.shortest_path(G)
-    shortest_path = []
-    for d in dst:
-        shortest_path.append(shortest_paths[src][d])
-
-    print "path is:", shortest_path
-
-    port_list = []
-    pl = []
-    for sp in shortest_path:
-        first = sp[1]
-        for h in sp[2:]:
-            pl.append(port_map[first][h])
-            first = h
-        port_list.append(pl)
-        pl = []
-
-    print "port list is:", port_list
-
-    port_str = []
-    ps = ""
-    for pl in port_list:
-        for p in pl:
-            ps += chr(p)
-        port_str.append(ps)
-        ps = ""
-    print "port string is:", port_str
+        port_map[b][a] = len(port_map[b]) + 1 
 
     while(1):
         msg = raw_input("What do you want to send: ")
 
         # finding the route
         first = None
-        ps = ""
-        for pl in port_list:
-            for p in pl:
-                ps += chr(p)
-            p = SrcRoute(num_valid = len(pl)) / ps / msg
-            print p.show()
-            sendp(p, iface = "eth0")
-            ps = ""
-            # print msg
+
+        p = SrcRoute() / msg
+        print p.show()
+        sendp(p, iface = "eth0")
+        # print msg
 
 if __name__ == '__main__':
     main()
