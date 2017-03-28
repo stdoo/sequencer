@@ -71,11 +71,6 @@ action _drop() {
     drop();
 }
 
-//不做任何操作
-action no_op() {
-    
-}
-
 //执行加1和多播给s1，s2. intrinsic_metadata.mcast_grp不为0就会设置多播，多播编号为mcast_group
 action s3_route(mcast_group) {
     //执行加1
@@ -94,7 +89,6 @@ table s3_check_pkt {
     }
     actions {
         _drop;
-        no_op;
     }
     size: 1;
 }
@@ -112,8 +106,11 @@ table s3_route_pkt {
 }
 
 control ingress {
-    apply(s3_check_pkt);
-    apply(s3_route_pkt);
+    apply(s3_check_pkt) {
+        miss { // If s3_check_pkt table matched, apply s3_route_pkt
+             apply(s3_route_pkt);
+         }
+    }
 }
 
 control egress {

@@ -157,25 +157,8 @@
     "meter_arrays": [],
     "actions": [
         {
-            "name": "_drop",
-            "id": 0,
-            "runtime_data": [],
-            "primitives": [
-                {
-                    "op": "drop",
-                    "parameters": []
-                }
-            ]
-        },
-        {
-            "name": "no_op",
-            "id": 1,
-            "runtime_data": [],
-            "primitives": []
-        },
-        {
             "name": "s1_route",
-            "id": 2,
+            "id": 0,
             "runtime_data": [
                 {
                     "name": "egress_spec",
@@ -198,6 +181,17 @@
                             "value": 0
                         }
                     ]
+                }
+            ]
+        },
+        {
+            "name": "_drop",
+            "id": 1,
+            "runtime_data": [],
+            "primitives": [
+                {
+                    "op": "drop",
+                    "parameters": []
                 }
             ]
         }
@@ -225,14 +219,13 @@
                         }
                     ],
                     "actions": [
-                        "_drop",
-                        "no_op"
+                        "_drop"
                     ],
                     "next_tables": {
-                        "_drop": "s1_route_pkt",
-                        "no_op": "s1_route_pkt"
+                        "__HIT__": null,
+                        "__MISS__": "s1_route_pkt"
                     },
-                    "base_default_next": "s1_route_pkt"
+                    "base_default_next": null
                 },
                 {
                     "name": "s1_route_pkt",

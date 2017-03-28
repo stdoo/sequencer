@@ -44,11 +44,6 @@ action _drop() {
     drop();
 }
 
-//不做任何操作
-action no_op() {
-    
-}
-
 //修改包的出口
 action s1_route(egress_spec) {
     modify_field(standard_metadata.egress_spec, egress_spec);
@@ -61,7 +56,6 @@ table s1_check_pkt {
     }
     actions {
         _drop;
-        no_op;
     }
     size: 1;
 }
@@ -80,8 +74,11 @@ table s1_route_pkt {
 }
 
 control ingress {
-    apply(s1_check_pkt);
-    apply(s1_route_pkt);
+    apply(s1_check_pkt) {
+        miss { // If s1_check_pkt table matched, apply s1_route_pkt
+             apply(s1_route_pkt);
+         }
+    }
 }
 
 control egress {

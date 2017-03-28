@@ -55,11 +55,6 @@ action _drop() {
     drop();
 }
 
-//不做任何操作
-action no_op() {
-    
-}
-
 //执行多播给h3,h4
 action s2_route(mcast_group) {
     modify_field(intrinsic_metadata.mcast_grp, mcast_group);
@@ -72,7 +67,6 @@ table s2_check_pkt {
     }
     actions {
         _drop;
-        no_op;
     }
     size: 1;
 }
@@ -90,8 +84,11 @@ table s2_route_pkt {
 }
 
 control ingress {
-    apply(s2_check_pkt);
-    apply(s2_route_pkt);
+    apply(s2_check_pkt) {
+        miss { // If s2_check_pkt table matched, apply s2_route_pkt
+             apply(s2_route_pkt);
+         }
+    }
 }
 
 control egress {

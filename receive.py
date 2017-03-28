@@ -29,7 +29,7 @@ def handle_pkt(pkt):
     if preamble != preamble_exp: return
     sequence_number = struct.unpack("<L", pkt[4:8])[0]
     msg = pkt[8:]
-    print('sequence_number:%s\tmsg:%s' %(sequence_number, msg))
+    print msg
     sys.stdout.flush()
 
 def main():

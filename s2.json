@@ -187,19 +187,8 @@
     "meter_arrays": [],
     "actions": [
         {
-            "name": "_drop",
-            "id": 0,
-            "runtime_data": [],
-            "primitives": [
-                {
-                    "op": "drop",
-                    "parameters": []
-                }
-            ]
-        },
-        {
             "name": "s2_route",
-            "id": 1,
+            "id": 0,
             "runtime_data": [
                 {
                     "name": "mcast_group",
@@ -226,10 +215,15 @@
             ]
         },
         {
-            "name": "no_op",
-            "id": 2,
+            "name": "_drop",
+            "id": 1,
             "runtime_data": [],
-            "primitives": []
+            "primitives": [
+                {
+                    "op": "drop",
+                    "parameters": []
+                }
+            ]
         }
     ],
     "pipelines": [
@@ -255,14 +249,13 @@
                         }
                     ],
                     "actions": [
-                        "_drop",
-                        "no_op"
+                        "_drop"
                     ],
                     "next_tables": {
-                        "_drop": "s2_route_pkt",
-                        "no_op": "s2_route_pkt"
+                        "__HIT__": null,
+                        "__MISS__": "s2_route_pkt"
                     },
-                    "base_default_next": "s2_route_pkt"
+                    "base_default_next": null
                 },
                 {
                     "name": "s2_route_pkt",
