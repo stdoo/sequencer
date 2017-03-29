@@ -27,9 +27,9 @@ def handle_pkt(pkt):
     preamble = pkt[:2]
     preamble_exp = "\x00" * 2
     if preamble != preamble_exp: return
-    sequence_number = struct.unpack("<L", pkt[4:8])[0]
+    sequence_number = ":".join("{:02x}".format(ord(c)) for c in pkt[4:8])
     msg = pkt[8:]
-    print msg
+    print("sequence_number: %s    msg: %s" %(sequence_number, msg))
     sys.stdout.flush()
 
 def main():
