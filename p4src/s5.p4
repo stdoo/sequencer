@@ -14,6 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+//用来设置多播的元数据
+header_type intrinsic_metadata_t {
+    fields {
+        mcast_grp : 16;                        /* multicast group */
+        lf_field_list : 32;                    /* Learn filter field list */
+        egress_rid : 16;                       /* replication index */
+        ingress_global_timestamp : 32;
+    }
+}
+metadata intrinsic_metadata_t intrinsic_metadata;
+
 //包头：preamble用来识别包，group_id用来识别group
 header_type pkt_head_t {
     fields {
@@ -44,13 +55,18 @@ action _drop() {
     drop();
 }
 
-//修改包的出口
-action s3_route(egress_spec) {
+//上传packet
+action s5_route(egress_spec) {
     modify_field(standard_metadata.egress_spec, egress_spec);
 }
 
+//执行多播
+action s5_mc_route(mcast_group) {
+    modify_field(intrinsic_metadata.mcast_grp, mcast_group);
+}
+
 //丢掉不正确的包
-table s3_check_pkt {
+table s5_check_pkt {
     reads {
         pkt_head: valid;
     }
@@ -60,22 +76,40 @@ table s3_check_pkt {
     size: 1;
 }
 
-//匹配group_id，匹配成功则修改包出口，不成功就丢掉.入口只有1和3合法.size为2.
-table s3_route_pkt {
+//匹配group_id和ingress_port,成功则上传
+table s5_route_pkt {
     reads {
+        standard_metadata.ingress_port : exact;
         pkt_head.group_id : exact;
     }
     actions {
         _drop;
-        s3_route;
+        s5_route;
+    }
+    size: 1;
+}
+
+//匹配group_id和ingress_port，成功则执行多播
+table s5_mc_pkt {
+    reads {
+        standard_metadata.ingress_port : exact;
+        pkt_head.group_id : exact;
+    }
+    actions {
+        _drop;
+        s5_mc_route;
     }
     size: 1;
 }
 
 control ingress {
-    apply(s3_check_pkt) {
-        miss { // If s3_check_pkt table matched, apply s3_route_pkt
-             apply(s3_route_pkt);
+    apply(s5_check_pkt) {
+        miss { // If s5_check_pkt table miss, apply s5_route_pkt
+             apply(s5_route_pkt){
+                 miss {
+                     apply(s5_mc_pkt);
+                 }
+             }
          }
     }
 }

@@ -27,10 +27,14 @@ CLI_PATH=$BMV2_PATH/tools/runtime_CLI.py
 $P4C_BM_SCRIPT p4src/s1.p4 --json s1.json
 $P4C_BM_SCRIPT p4src/s2.p4 --json s2.json
 $P4C_BM_SCRIPT p4src/s3.p4 --json s3.json
+$P4C_BM_SCRIPT p4src/s4.p4 --json s4.json
+$P4C_BM_SCRIPT p4src/s5.p4 --json s5.json
+$P4C_BM_SCRIPT p4src/s6.p4 --json s6.json
+$P4C_BM_SCRIPT p4src/s7.p4 --json s7.json
 
 # This gives libtool the opportunity to "warm-up"
 sudo $SWITCH_PATH >/dev/null 2>&1
 sudo PYTHONPATH=$PYTHONPATH:$BMV2_PATH/mininet/ python topo.py \
     --behavioral-exe $SWITCH_PATH \
-    --json s1.json s2.json s3.json \
+    --json s1.json s2.json s3.json s4.json s5.json s6.json s7.json\
     --cli $CLI_PATH \

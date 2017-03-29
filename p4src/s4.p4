@@ -45,12 +45,12 @@ action _drop() {
 }
 
 //修改包的出口
-action s3_route(egress_spec) {
+action s4_route(egress_spec) {
     modify_field(standard_metadata.egress_spec, egress_spec);
 }
 
 //丢掉不正确的包
-table s3_check_pkt {
+table s4_check_pkt {
     reads {
         pkt_head: valid;
     }
@@ -61,21 +61,21 @@ table s3_check_pkt {
 }
 
 //匹配group_id，匹配成功则修改包出口，不成功就丢掉.入口只有1和3合法.size为2.
-table s3_route_pkt {
+table s4_route_pkt {
     reads {
         pkt_head.group_id : exact;
     }
     actions {
         _drop;
-        s3_route;
+        s4_route;
     }
     size: 1;
 }
 
 control ingress {
-    apply(s3_check_pkt) {
-        miss { // If s3_check_pkt table matched, apply s3_route_pkt
-             apply(s3_route_pkt);
+    apply(s4_check_pkt) {
+        miss { // If s4_check_pkt table matched, apply s4_route_pkt
+             apply(s4_route_pkt);
          }
     }
 }

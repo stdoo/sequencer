@@ -48,19 +48,23 @@
             "max_length": null
         },
         {
-            "name": "sequencer_head_t",
+            "name": "intrinsic_metadata_t",
             "id": 1,
             "fields": [
                 [
-                    "preamble",
-                    64
+                    "mcast_grp",
+                    16
                 ],
                 [
-                    "num_valid",
+                    "lf_field_list",
                     32
                 ],
                 [
-                    "serial_number",
+                    "egress_rid",
+                    16
+                ],
+                [
+                    "ingress_global_timestamp",
                     32
                 ]
             ],
@@ -68,12 +72,20 @@
             "max_length": null
         },
         {
-            "name": "sequencer_port_t",
+            "name": "pkt_head_t",
             "id": 2,
             "fields": [
                 [
-                    "port",
-                    8
+                    "preamble",
+                    16
+                ],
+                [
+                    "group_id",
+                    16
+                ],
+                [
+                    "sequence_number",
+                    32
                 ]
             ],
             "length_exp": null,
@@ -84,7 +96,7 @@
             "id": 3,
             "fields": [
                 [
-                    "serial_number",
+                    "sequence_number",
                     32
                 ]
             ],
@@ -100,15 +112,15 @@
             "metadata": true
         },
         {
-            "name": "sequencer_head",
+            "name": "intrinsic_metadata",
             "id": 1,
-            "header_type": "sequencer_head_t",
-            "metadata": false
+            "header_type": "intrinsic_metadata_t",
+            "metadata": true
         },
         {
-            "name": "sequencer_port",
+            "name": "pkt_head",
             "id": 2,
-            "header_type": "sequencer_port_t",
+            "header_type": "pkt_head_t",
             "metadata": false
         },
         {
@@ -134,14 +146,14 @@
                             "type": "lookahead",
                             "value": [
                                 0,
-                                64
+                                16
                             ]
                         }
                     ],
                     "transitions": [
                         {
                             "type": "hexstr",
-                            "value": "0x0000000000000000",
+                            "value": "0x0000",
                             "mask": null,
                             "next_state": "parse_head"
                         },
@@ -162,45 +174,7 @@
                             "parameters": [
                                 {
                                     "type": "regular",
-                                    "value": "sequencer_head"
-                                }
-                            ]
-                        }
-                    ],
-                    "transition_key": [
-                        {
-                            "type": "field",
-                            "value": [
-                                "sequencer_head",
-                                "num_valid"
-                            ]
-                        }
-                    ],
-                    "transitions": [
-                        {
-                            "type": "hexstr",
-                            "value": "0x00000000",
-                            "mask": null,
-                            "next_state": null
-                        },
-                        {
-                            "type": "default",
-                            "value": null,
-                            "mask": null,
-                            "next_state": "parse_port"
-                        }
-                    ]
-                },
-                {
-                    "name": "parse_port",
-                    "id": 2,
-                    "parser_ops": [
-                        {
-                            "op": "extract",
-                            "parameters": [
-                                {
-                                    "type": "regular",
-                                    "value": "sequencer_port"
+                                    "value": "pkt_head"
                                 }
                             ]
                         }
@@ -224,73 +198,22 @@
             "name": "deparser",
             "id": 0,
             "order": [
-                "sequencer_head",
-                "sequencer_port"
+                "pkt_head"
             ]
         }
     ],
     "meter_arrays": [],
     "actions": [
         {
-            "name": "_drop",
+            "name": "s7_route",
             "id": 0,
-            "runtime_data": [],
-            "primitives": [
+            "runtime_data": [
                 {
-                    "op": "drop",
-                    "parameters": []
+                    "name": "mcast_group",
+                    "bitwidth": 16
                 }
-            ]
-        },
-        {
-            "name": "route",
-            "id": 1,
-            "runtime_data": [],
+            ],
             "primitives": [
-                {
-                    "op": "modify_field",
-                    "parameters": [
-                        {
-                            "type": "field",
-                            "value": [
-                                "standard_metadata",
-                                "egress_spec"
-                            ]
-                        },
-                        {
-                            "type": "field",
-                            "value": [
-                                "sequencer_port",
-                                "port"
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "op": "add_to_field",
-                    "parameters": [
-                        {
-                            "type": "field",
-                            "value": [
-                                "sequencer_head",
-                                "num_valid"
-                            ]
-                        },
-                        {
-                            "type": "hexstr",
-                            "value": "-0x1"
-                        }
-                    ]
-                },
-                {
-                    "op": "remove_header",
-                    "parameters": [
-                        {
-                            "type": "header",
-                            "value": "sequencer_port"
-                        }
-                    ]
-                },
                 {
                     "op": "register_read",
                     "parameters": [
@@ -298,12 +221,12 @@
                             "type": "field",
                             "value": [
                                 "ingress_data",
-                                "serial_number"
+                                "sequence_number"
                             ]
                         },
                         {
                             "type": "register_array",
-                            "value": "serial_number"
+                            "value": "sequence_number"
                         },
                         {
                             "type": "hexstr",
@@ -317,15 +240,15 @@
                         {
                             "type": "field",
                             "value": [
-                                "sequencer_head",
-                                "serial_number"
+                                "pkt_head",
+                                "sequence_number"
                             ]
                         },
                         {
                             "type": "field",
                             "value": [
                                 "ingress_data",
-                                "serial_number"
+                                "sequence_number"
                             ]
                         }
                     ]
@@ -337,7 +260,7 @@
                             "type": "field",
                             "value": [
                                 "ingress_data",
-                                "serial_number"
+                                "sequence_number"
                             ]
                         },
                         {
@@ -351,7 +274,7 @@
                     "parameters": [
                         {
                             "type": "register_array",
-                            "value": "serial_number"
+                            "value": "sequence_number"
                         },
                         {
                             "type": "hexstr",
@@ -361,10 +284,37 @@
                             "type": "field",
                             "value": [
                                 "ingress_data",
-                                "serial_number"
+                                "sequence_number"
                             ]
                         }
                     ]
+                },
+                {
+                    "op": "modify_field",
+                    "parameters": [
+                        {
+                            "type": "field",
+                            "value": [
+                                "intrinsic_metadata",
+                                "mcast_grp"
+                            ]
+                        },
+                        {
+                            "type": "runtime_data",
+                            "value": 0
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "_drop",
+            "id": 1,
+            "runtime_data": [],
+            "primitives": [
+                {
+                    "op": "drop",
+                    "parameters": []
                 }
             ]
         }
@@ -373,10 +323,10 @@
         {
             "name": "ingress",
             "id": 0,
-            "init_table": "route_pkt",
+            "init_table": "s7_check_pkt",
             "tables": [
                 {
-                    "name": "route_pkt",
+                    "name": "s7_check_pkt",
                     "id": 0,
                     "match_type": "exact",
                     "type": "simple",
@@ -387,17 +337,45 @@
                     "key": [
                         {
                             "match_type": "valid",
-                            "target": "sequencer_port",
+                            "target": "pkt_head",
                             "mask": null
                         }
                     ],
                     "actions": [
-                        "_drop",
-                        "route"
+                        "_drop"
                     ],
                     "next_tables": {
-                        "_drop": null,
-                        "route": null
+                        "__HIT__": null,
+                        "__MISS__": "s7_route_pkt"
+                    },
+                    "base_default_next": null
+                },
+                {
+                    "name": "s7_route_pkt",
+                    "id": 1,
+                    "match_type": "exact",
+                    "type": "simple",
+                    "max_size": 1,
+                    "with_counters": false,
+                    "direct_meters": null,
+                    "support_timeout": false,
+                    "key": [
+                        {
+                            "match_type": "exact",
+                            "target": [
+                                "pkt_head",
+                                "group_id"
+                            ],
+                            "mask": null
+                        }
+                    ],
+                    "actions": [
+                        "s7_route",
+                        "_drop"
+                    ],
+                    "next_tables": {
+                        "s7_route": null,
+                        "_drop": null
                     },
                     "base_default_next": null
                 }
@@ -421,7 +399,7 @@
     "counter_arrays": [],
     "register_arrays": [
         {
-            "name": "serial_number",
+            "name": "sequence_number",
             "id": 0,
             "bitwidth": 32,
             "size": 1
@@ -459,6 +437,22 @@
         [
             "standard_metadata",
             "_padding"
+        ],
+        [
+            "intrinsic_metadata",
+            "mcast_grp"
+        ],
+        [
+            "intrinsic_metadata",
+            "lf_field_list"
+        ],
+        [
+            "intrinsic_metadata",
+            "egress_rid"
+        ],
+        [
+            "intrinsic_metadata",
+            "ingress_global_timestamp"
         ]
     ]
 }

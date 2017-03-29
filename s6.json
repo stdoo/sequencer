@@ -48,8 +48,32 @@
             "max_length": null
         },
         {
-            "name": "pkt_head_t",
+            "name": "intrinsic_metadata_t",
             "id": 1,
+            "fields": [
+                [
+                    "mcast_grp",
+                    16
+                ],
+                [
+                    "lf_field_list",
+                    32
+                ],
+                [
+                    "egress_rid",
+                    16
+                ],
+                [
+                    "ingress_global_timestamp",
+                    32
+                ]
+            ],
+            "length_exp": null,
+            "max_length": null
+        },
+        {
+            "name": "pkt_head_t",
+            "id": 2,
             "fields": [
                 [
                     "preamble",
@@ -76,8 +100,14 @@
             "metadata": true
         },
         {
-            "name": "pkt_head",
+            "name": "intrinsic_metadata",
             "id": 1,
+            "header_type": "intrinsic_metadata_t",
+            "metadata": true
+        },
+        {
+            "name": "pkt_head",
+            "id": 2,
             "header_type": "pkt_head_t",
             "metadata": false
         }
@@ -157,12 +187,12 @@
     "meter_arrays": [],
     "actions": [
         {
-            "name": "s3_route",
+            "name": "s6_route",
             "id": 0,
             "runtime_data": [
                 {
-                    "name": "egress_spec",
-                    "bitwidth": 9
+                    "name": "mcast_group",
+                    "bitwidth": 16
                 }
             ],
             "primitives": [
@@ -172,8 +202,8 @@
                         {
                             "type": "field",
                             "value": [
-                                "standard_metadata",
-                                "egress_spec"
+                                "intrinsic_metadata",
+                                "mcast_grp"
                             ]
                         },
                         {
@@ -200,10 +230,10 @@
         {
             "name": "ingress",
             "id": 0,
-            "init_table": "s3_check_pkt",
+            "init_table": "s6_check_pkt",
             "tables": [
                 {
-                    "name": "s3_check_pkt",
+                    "name": "s6_check_pkt",
                     "id": 0,
                     "match_type": "exact",
                     "type": "simple",
@@ -223,12 +253,12 @@
                     ],
                     "next_tables": {
                         "__HIT__": null,
-                        "__MISS__": "s3_route_pkt"
+                        "__MISS__": "s6_route_pkt"
                     },
                     "base_default_next": null
                 },
                 {
-                    "name": "s3_route_pkt",
+                    "name": "s6_route_pkt",
                     "id": 1,
                     "match_type": "exact",
                     "type": "simple",
@@ -248,11 +278,11 @@
                     ],
                     "actions": [
                         "_drop",
-                        "s3_route"
+                        "s6_route"
                     ],
                     "next_tables": {
                         "_drop": null,
-                        "s3_route": null
+                        "s6_route": null
                     },
                     "base_default_next": null
                 }
@@ -307,6 +337,22 @@
         [
             "standard_metadata",
             "_padding"
+        ],
+        [
+            "intrinsic_metadata",
+            "mcast_grp"
+        ],
+        [
+            "intrinsic_metadata",
+            "lf_field_list"
+        ],
+        [
+            "intrinsic_metadata",
+            "egress_rid"
+        ],
+        [
+            "intrinsic_metadata",
+            "ingress_global_timestamp"
         ]
     ]
 }

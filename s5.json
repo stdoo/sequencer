@@ -48,19 +48,23 @@
             "max_length": null
         },
         {
-            "name": "sequencer_head_t",
+            "name": "intrinsic_metadata_t",
             "id": 1,
             "fields": [
                 [
-                    "preamble",
-                    64
+                    "mcast_grp",
+                    16
                 ],
                 [
-                    "num_valid",
+                    "lf_field_list",
                     32
                 ],
                 [
-                    "serial_number",
+                    "egress_rid",
+                    16
+                ],
+                [
+                    "ingress_global_timestamp",
                     32
                 ]
             ],
@@ -68,12 +72,20 @@
             "max_length": null
         },
         {
-            "name": "sequencer_port_t",
+            "name": "pkt_head_t",
             "id": 2,
             "fields": [
                 [
-                    "port",
-                    8
+                    "preamble",
+                    16
+                ],
+                [
+                    "group_id",
+                    16
+                ],
+                [
+                    "sequence_number",
+                    32
                 ]
             ],
             "length_exp": null,
@@ -88,15 +100,15 @@
             "metadata": true
         },
         {
-            "name": "sequencer_head",
+            "name": "intrinsic_metadata",
             "id": 1,
-            "header_type": "sequencer_head_t",
-            "metadata": false
+            "header_type": "intrinsic_metadata_t",
+            "metadata": true
         },
         {
-            "name": "sequencer_port",
+            "name": "pkt_head",
             "id": 2,
-            "header_type": "sequencer_port_t",
+            "header_type": "pkt_head_t",
             "metadata": false
         }
     ],
@@ -116,14 +128,14 @@
                             "type": "lookahead",
                             "value": [
                                 0,
-                                64
+                                16
                             ]
                         }
                     ],
                     "transitions": [
                         {
                             "type": "hexstr",
-                            "value": "0x0000000000000000",
+                            "value": "0x0000",
                             "mask": null,
                             "next_state": "parse_head"
                         },
@@ -144,45 +156,7 @@
                             "parameters": [
                                 {
                                     "type": "regular",
-                                    "value": "sequencer_head"
-                                }
-                            ]
-                        }
-                    ],
-                    "transition_key": [
-                        {
-                            "type": "field",
-                            "value": [
-                                "sequencer_head",
-                                "num_valid"
-                            ]
-                        }
-                    ],
-                    "transitions": [
-                        {
-                            "type": "hexstr",
-                            "value": "0x00000000",
-                            "mask": null,
-                            "next_state": null
-                        },
-                        {
-                            "type": "default",
-                            "value": null,
-                            "mask": null,
-                            "next_state": "parse_port"
-                        }
-                    ]
-                },
-                {
-                    "name": "parse_port",
-                    "id": 2,
-                    "parser_ops": [
-                        {
-                            "op": "extract",
-                            "parameters": [
-                                {
-                                    "type": "regular",
-                                    "value": "sequencer_port"
+                                    "value": "pkt_head"
                                 }
                             ]
                         }
@@ -206,8 +180,7 @@
             "name": "deparser",
             "id": 0,
             "order": [
-                "sequencer_head",
-                "sequencer_port"
+                "pkt_head"
             ]
         }
     ],
@@ -225,9 +198,14 @@
             ]
         },
         {
-            "name": "route",
+            "name": "s5_route",
             "id": 1,
-            "runtime_data": [],
+            "runtime_data": [
+                {
+                    "name": "egress_spec",
+                    "bitwidth": 9
+                }
+            ],
             "primitives": [
                 {
                     "op": "modify_field",
@@ -240,36 +218,36 @@
                             ]
                         },
                         {
-                            "type": "field",
-                            "value": [
-                                "sequencer_port",
-                                "port"
-                            ]
+                            "type": "runtime_data",
+                            "value": 0
                         }
                     ]
-                },
+                }
+            ]
+        },
+        {
+            "name": "s5_mc_route",
+            "id": 2,
+            "runtime_data": [
                 {
-                    "op": "add_to_field",
+                    "name": "mcast_group",
+                    "bitwidth": 16
+                }
+            ],
+            "primitives": [
+                {
+                    "op": "modify_field",
                     "parameters": [
                         {
                             "type": "field",
                             "value": [
-                                "sequencer_head",
-                                "num_valid"
+                                "intrinsic_metadata",
+                                "mcast_grp"
                             ]
                         },
                         {
-                            "type": "hexstr",
-                            "value": "-0x1"
-                        }
-                    ]
-                },
-                {
-                    "op": "remove_header",
-                    "parameters": [
-                        {
-                            "type": "header",
-                            "value": "sequencer_port"
+                            "type": "runtime_data",
+                            "value": 0
                         }
                     ]
                 }
@@ -280,10 +258,10 @@
         {
             "name": "ingress",
             "id": 0,
-            "init_table": "route_pkt",
+            "init_table": "s5_check_pkt",
             "tables": [
                 {
-                    "name": "route_pkt",
+                    "name": "s5_check_pkt",
                     "id": 0,
                     "match_type": "exact",
                     "type": "simple",
@@ -294,17 +272,90 @@
                     "key": [
                         {
                             "match_type": "valid",
-                            "target": "sequencer_port",
+                            "target": "pkt_head",
+                            "mask": null
+                        }
+                    ],
+                    "actions": [
+                        "_drop"
+                    ],
+                    "next_tables": {
+                        "__HIT__": null,
+                        "__MISS__": "s5_route_pkt"
+                    },
+                    "base_default_next": null
+                },
+                {
+                    "name": "s5_route_pkt",
+                    "id": 1,
+                    "match_type": "exact",
+                    "type": "simple",
+                    "max_size": 1,
+                    "with_counters": false,
+                    "direct_meters": null,
+                    "support_timeout": false,
+                    "key": [
+                        {
+                            "match_type": "exact",
+                            "target": [
+                                "standard_metadata",
+                                "ingress_port"
+                            ],
+                            "mask": null
+                        },
+                        {
+                            "match_type": "exact",
+                            "target": [
+                                "pkt_head",
+                                "group_id"
+                            ],
                             "mask": null
                         }
                     ],
                     "actions": [
                         "_drop",
-                        "route"
+                        "s5_route"
+                    ],
+                    "next_tables": {
+                        "__HIT__": null,
+                        "__MISS__": "s5_mc_pkt"
+                    },
+                    "base_default_next": null
+                },
+                {
+                    "name": "s5_mc_pkt",
+                    "id": 2,
+                    "match_type": "exact",
+                    "type": "simple",
+                    "max_size": 1,
+                    "with_counters": false,
+                    "direct_meters": null,
+                    "support_timeout": false,
+                    "key": [
+                        {
+                            "match_type": "exact",
+                            "target": [
+                                "standard_metadata",
+                                "ingress_port"
+                            ],
+                            "mask": null
+                        },
+                        {
+                            "match_type": "exact",
+                            "target": [
+                                "pkt_head",
+                                "group_id"
+                            ],
+                            "mask": null
+                        }
+                    ],
+                    "actions": [
+                        "_drop",
+                        "s5_mc_route"
                     ],
                     "next_tables": {
                         "_drop": null,
-                        "route": null
+                        "s5_mc_route": null
                     },
                     "base_default_next": null
                 }
@@ -359,6 +410,22 @@
         [
             "standard_metadata",
             "_padding"
+        ],
+        [
+            "intrinsic_metadata",
+            "mcast_grp"
+        ],
+        [
+            "intrinsic_metadata",
+            "lf_field_list"
+        ],
+        [
+            "intrinsic_metadata",
+            "egress_rid"
+        ],
+        [
+            "intrinsic_metadata",
+            "ingress_global_timestamp"
         ]
     ]
 }

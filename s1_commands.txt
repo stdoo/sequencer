@@ -1,4 +1,3 @@
-table_set_default s1_check_pkt no_op
 table_add s1_check_pkt _drop 0 =>
 
 table_set_default s1_route_pkt _drop

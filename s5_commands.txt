@@ -1,0 +1,12 @@
+table_add s5_check_pkt _drop 0 =>
+
+table_set_default s5_route_pkt _drop
+table_add s5_route_pkt s5_route 1 0 => 3
+
+table_set_default s5_mc_pkt _drop
+table_add s5_mc_pkt s5_mc_route 3 0 => 1
+mc_mgrp_create 1
+mc_node_create 0 1
+mc_node_create 1 2
+mc_node_associate 1 0
+mc_node_associate 1 1
